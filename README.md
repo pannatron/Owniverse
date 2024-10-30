@@ -34,7 +34,7 @@ CHAIN_ID=25925
 npm install
 
 ```
-```
+
 ุ5.Compile the smart contracts using Hardhat:
 
 ```bash
