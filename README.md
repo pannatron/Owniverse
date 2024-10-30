@@ -15,7 +15,8 @@ Before starting the project, make sure you have the following installed:
 1. Clone the repository to your local machine:
 
    ```bash
-   git clone https://github.com/pannatron/Owniverse.git```
+   git clone https://github.com/pannatron/Owniverse.git
+
 2. Navigate to the project directory:
 ```bash
 cd Owniverse
@@ -34,8 +35,7 @@ CHAIN_ID=25925
 npm install
 
 ```
-
-ุ5.Compile the smart contracts using Hardhat:
+5.Compile the smart contracts using Hardhat:
 
 ```bash
 npx hardhat compile
