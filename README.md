@@ -38,6 +38,10 @@ npm install
 
 cd backend
 npm install express body-parser web3@1.7.0 ethers dotenv
+npm install --save-dev hardhat
+npm install --save-dev @nomiclabs/hardhat-waffle
+npm install --save-dev @nomiclabs/hardhat-ethers ethers
+
 ```
 
 # Running the Project
