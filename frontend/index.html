@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Your Token</title>
+
+    <!-- ลิงก์ไปยัง style.css -->
+    <link rel="stylesheet" href="/style.css"> 
+
+    <!-- เพิ่ม Web3.js ผ่าน CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.7.0/dist/web3.min.js"></script>
+
+    <!-- ลิงก์ไปยัง app.js -->
+    <script src="/app.js" defer></script> 
+</head>
+<body>
+    <div class="container">
+        <h1>Create Your Token</h1>
+
+        <!-- ปุ่ม Connect MetaMask -->
+        <button id="connectButton" onclick="connectMetaMask()">Connect MetaMask</button>
+        <p id="userAddress"></p> <!-- แสดงที่อยู่ MetaMask ที่เชื่อมต่อ -->
+
+        <!-- ฟอร์มสร้างโทเคน -->
+        <form id="tokenForm">
+            <label for="tokenName">Token Name</label>
+            <input type="text" id="tokenName" placeholder="MyToken" required />
+
+            <label for="tokenSymbol">Token Symbol</label>
+            <input type="text" id="tokenSymbol" placeholder="MTK" required />
+
+            <label for="tokenLogo">Token Logo (URL)</label>
+            <input type="text" id="tokenLogo" placeholder="https://example.com/logo.png" />
+
+            <label for="features">Features</label>
+            <select id="features" multiple>
+                <option value="upgradeable">Upgradeable</option>
+                <option value="mintable">Mintable</option>
+                <option value="burnable">Burnable</option>
+            </select>
+
+            <button type="submit">Create Token</button>
+        </form>
+
+        <!-- ปุ่ม Mint More Tokens -->
+        <button id="mintButton" onclick="mintMoreTokens()" disabled>Mint More Tokens</button>
+    </div>
+</body>
+</html>
