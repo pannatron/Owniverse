@@ -37,7 +37,7 @@ npm install
 ```bash
 
 cd backend
-npm install express body-parser web3 ethers dotenv
+npm install express body-parser web3@1.7.0 ethers dotenv
 ```
 
 # Running the Project
@@ -49,7 +49,7 @@ cd backend
 ```
 2. Start the backend server:
 ```bash
-node server.js
+node -r esm server.js
 ```
 
 The backend server will be running on port `3000`.
@@ -110,3 +110,30 @@ Contributions are welcome! If you'd like to contribute, please fork the reposito
 3. Make your changes and commit them: `git commit -m 'Add new feature'`.
 4. Push to the branch: `git push origin feature-name`.
 5. Submit a pull request.
+
+``` bash
+project-root/
+│
+├── contracts/
+│   └── BOROTToken.sol     # Smart contract ของเหรียญ (ERC20) ที่รองรับฟีเจอร์เพิ่มเติม
+│
+├── scripts/
+│   └── deploy.js          # สคริปต์ที่ใช้ deploy smart contract โดยใช้ Hardhat
+│
+├── frontend/
+│   ├── index.html         # หน้าเว็บไซต์หลักสำหรับให้ผู้ใช้เลือกฟีเจอร์เหรียญ
+│   ├── style.css          # ไฟล์ CSS สำหรับจัดการหน้าตาเว็บไซต์
+│   └── app.js             # JavaScript ฝั่ง frontend สำหรับเชื่อมต่อกับ MetaMask และ backend
+│
+├── backend/
+│   ├── server.js          # ระบบ backend ที่เชื่อมต่อกับ Biconomy หรือ GSN และ Hardhat
+│   └── package.json       # ไฟล์สำหรับจัดการ dependencies ของ backend (Node.js)
+│
+├── hardhat.config.js       # การตั้งค่า Hardhat สำหรับการ deploy smart contract
+├── .env                    # เก็บ environment variables เช่น private key และ API keys
+└── README.md               # คู่มือการใช้งานโปรเจค
+
+``` 
+
+## Testing APIs
+Note: These APIs are designed to work with the Bitkub Chain Testnet.
