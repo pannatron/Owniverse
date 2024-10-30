@@ -15,7 +15,7 @@ Before starting the project, make sure you have the following installed:
 1. Clone the repository to your local machine:
 
    ```bash
-   git clone https://github.com/your-repo/owniverse.git```
+   git clone https://github.com/pannatron/Owniverse.git```
 2. Navigate to the project directory:
 ```bash
 cd Owniverse
@@ -32,8 +32,19 @@ CHAIN_ID=25925
 ```bash
 
 npm install
+
 ```
-5.Navigate to the backend directory and install additional dependencies:
+```
+ุ5.Compile the smart contracts using Hardhat:
+
+```bash
+npx hardhat compile
+
+```
+This will generate the `artifacts` folder and the necessary `OwniverseToken.json` file that you'll need for deployment.
+
+
+ุ6.Navigate to the backend directory and install additional dependencies:
 ```bash
 
 cd backend
