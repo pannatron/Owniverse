@@ -31,6 +31,8 @@ document.getElementById('tokenForm').onsubmit = async function (e) {
     const features = Array.from(document.getElementById('features').selectedOptions).map(opt => opt.value);
     console.log("Creating Token with:", { tokenName, tokenSymbol, tokenLogo, features });
 
+    document.getElementById('mintButton').disabled = true; // Disable ปุ่มเมื่อเริ่มการสร้าง token
+
     await createTokenOnBackend(tokenName, tokenSymbol, tokenLogo, features);
 };
 
@@ -42,13 +44,21 @@ async function createTokenOnBackend(tokenName, tokenSymbol, tokenLogo, features)
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ tokenName, tokenSymbol, tokenLogo, features, userAddress })
         });
+
         const data = await response.json();
         console.log("Token created:", data);
-        
-        // ส่ง tokenAddress ไปยังฟังก์ชัน signTransaction
-        await signTransaction(data.tokenAddress);
+
+        if (data.tokenAddress) {
+            // ส่ง tokenAddress ไปยังฟังก์ชัน signTransaction
+            await signTransaction(data.tokenAddress);
+        } else {
+            throw new Error("Token address not found");
+        }
+
     } catch (error) {
         console.error("Error creating token:", error);
+    } finally {
+        document.getElementById('mintButton').disabled = false; // เปิดใช้งานปุ่มอีกครั้งเมื่อเสร็จสิ้น
     }
 }
 
@@ -68,14 +78,30 @@ async function signTransaction(tokenAddress) {
         alert('Please connect MetaMask first.');
         return;
     }
-    
-    const message = "I authorize this transaction";
-    const signature = await web3.eth.personal.sign(message, userAddress);
 
-    // ส่งลายเซ็นและข้อมูลไปให้ backend (Relayer)
-    await fetch('/api/sendTransaction', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userAddress, signature, message, tokenAddress }) // ส่ง tokenAddress ด้วย
-    });
+    const message = "I authorize this transaction";
+    try {
+        const signature = await web3.eth.personal.sign(message, userAddress);
+        console.log("Signature:", signature);
+
+        // ส่งลายเซ็นและข้อมูลไปให้ backend (Relayer)
+        const response = await fetch('/api/sendTransaction', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userAddress, signature, message, tokenAddress }) // ส่ง tokenAddress ด้วย
+        });
+
+        const result = await response.json();
+        console.log("Transaction result:", result);
+
+        if (response.ok) {
+            alert("Transaction sent successfully!");
+        } else {
+            alert("Transaction failed: " + result.error);
+        }
+
+    } catch (error) {
+        console.error("Error signing transaction:", error);
+        alert("Error signing transaction: " + error.message);
+    }
 }
