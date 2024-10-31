@@ -77,35 +77,41 @@ app.post('/api/createToken', async (req, res) => {
 
 
 // API สำหรับส่งธุรกรรม
+// API สำหรับส่งธุรกรรม
 app.post('/api/sendTransaction', async (req, res) => {
     const { userAddress, signature, message, tokenAddress } = req.body; // รับ tokenAddress
 
     const signer = web3.eth.accounts.recover(message, signature);
     if (signer.toLowerCase() !== userAddress.toLowerCase()) {
-        return res.status(400).send('Invalid signature');
+        return res.status(400).json({ error: 'Invalid signature' });
     }
 
     // ใช้ tokenAddress ที่ส่งมาจาก frontend
     const contract = new web3.eth.Contract(ABI, tokenAddress); // ใช้ tokenAddress แทน 'contract_address'
     const transactionData = contract.methods.mint(userAddress, 1000).encodeABI();
 
-    const relayerPrivateKey = process.env.RELAYER_PRIVATE_KEY;
-    const signedTx = await web3.eth.accounts.signTransaction({
-        to: tokenAddress,
-        data: transactionData,
-        gas: 2000000,
-        gasPrice: web3.utils.toWei('50', 'gwei') // เพิ่ม gas price ที่สูงขึ้น
-    }, relayerPrivateKey);
+    try {
+        const relayerPrivateKey = process.env.RELAYER_PRIVATE_KEY;
+        const signedTx = await web3.eth.accounts.signTransaction({
+            to: tokenAddress,
+            data: transactionData,
+            gas: 2000000,
+            gasPrice: web3.utils.toWei('50', 'gwei') // เพิ่ม gas price ที่สูงขึ้น
+        }, relayerPrivateKey);
 
-    web3.eth.sendSignedTransaction(signedTx.rawTransaction,{timeout: 10000})
-        .on('receipt', (receipt) => {
-            console.log('Transaction successful:', receipt);
-            res.status(200).send('Transaction sent');
-        })
-        .on('error', (error) => {
-            console.error('Error sending transaction:', error);
-            res.status(500).send('Transaction failed');
-        });
+        web3.eth.sendSignedTransaction(signedTx.rawTransaction, { timeout: 10000 })
+            .on('receipt', (receipt) => {
+                console.log('Transaction successful:', receipt);
+                res.status(200).json({ message: 'Transaction sent', receipt });
+            })
+            .on('error', (error) => {
+                console.error('Error sending transaction:', error);
+                res.status(500).json({ error: 'Transaction failed', details: error.message });
+            });
+    } catch (error) {
+        console.error('Error signing transaction:', error);
+        res.status(500).json({ error: 'Error signing transaction', details: error.message });
+    }
 });
 
 // เริ่มต้นเซิร์ฟเวอร์
