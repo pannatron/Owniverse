@@ -4,6 +4,8 @@ const path = require('path');
 const { ethers } = require("ethers");
 const Web3 = require('web3');
 const contractArtifact = require('../artifacts/contracts/Token.sol/OwniverseToken.json');
+const { deployTokenContract } = require('../services/deployToken');
+
 const ABI = contractArtifact.abi;
 
 require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
@@ -20,71 +22,16 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, '../frontend', 'index.html'));
 });
 
-async function deployTokenContract(tokenName, tokenSymbol, features, userAddress) {
-    const relayerPrivateKey = process.env.RELAYER_PRIVATE_KEY;
-    const developerAddress = process.env.DEV_PUBLIC_KEY;
-
-    if (!relayerPrivateKey) {
-        throw new Error('Relayer private key is undefined.');
-    }
-
-    if (!tokenName || !tokenSymbol || !userAddress) {
-        throw new Error('Invalid input data: missing tokenName, tokenSymbol, or userAddress.');
-    }
-
-    if (!ethers.utils.isAddress(userAddress)) {
-        throw new Error('Invalid Ethereum address.');
-    }
-
-    console.log('Deploying Token with:', { tokenName, tokenSymbol, userAddress });
-
-    const provider = new ethers.providers.JsonRpcProvider(process.env.RPC_URL);
-    const signer = new ethers.Wallet(relayerPrivateKey, provider);
-
-    const TokenFactory = new ethers.ContractFactory(contractArtifact.abi, contractArtifact.bytecode, signer);
-    console.log('Relayer Private Key:', relayerPrivateKey);
-    console.log('Provider URL:', process.env.RPC_URL);
-    console.log('ABI:', ABI);
-    console.log('Contract deployment inputs:', { tokenName, tokenSymbol, userAddress, features });
-
-    // Deploy contract and initialize
-    const token = await TokenFactory.deploy();
-    await token.deployed();
-    console.log(`Token deployed at: ${token.address}`);
-    console.log('Initializing contract with:', {
-        tokenName, 
-        tokenSymbol, 
-        initialSupply: 1000000, 
-        developerAddress, 
-        userAddress,
-        mintable: features.includes('mintable'), 
-        burnable: features.includes('burnable'), 
-        upgradeable: features.includes('upgradeable')
-    });
-    
-    // Initialize contract
-    await token.initialize(
-        tokenName, 
-        tokenSymbol, 
-        1000000, 
-        developerAddress, 
-        userAddress, // เพิ่ม userAddress เข้าไป
-        features.includes('mintable'), 
-        features.includes('burnable'), 
-        features.includes('upgradeable'),
-        { gasLimit: 5000000 } // ตั้งค่า gas limit
-
-    );
-    
-    return token.address;
-}
 
 app.post('/api/createToken', async (req, res) => {
     const { tokenName, tokenSymbol, features, userAddress } = req.body;
+    const relayerPrivateKey = process.env.RELAYER_PRIVATE_KEY;
+    const developerAddress = process.env.DEV_PUBLIC_KEY;
+    const provider = new ethers.providers.JsonRpcProvider(process.env.RPC_URL);
 
     try {
         console.log('Creating token with:', { tokenName, tokenSymbol, features, userAddress });
-        const tokenAddress = await deployTokenContract(tokenName, tokenSymbol, features, userAddress);
+        const tokenAddress = await deployTokenContract(tokenName, tokenSymbol, features, userAddress,provider, relayerPrivateKey, developerAddress);
         res.json({ tokenAddress, message: `Token deployed successfully at address: ${tokenAddress}` });
     } catch (error) {
         console.error('Error deploying token:', error);
