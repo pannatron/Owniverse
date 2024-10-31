@@ -44,12 +44,12 @@ npm install --save-dev hardhat
 
 npm install --save-dev @nomiclabs/hardhat-waffle @nomiclabs/hardhat-ethers ethers
 ```
-ึ7.Install OpenZeppelin Contracts: This is necessary for importing contract templates:
+7.Install OpenZeppelin Contracts: This is necessary for importing contract templates:
 ```bash
 
 npm install @openzeppelin/contracts
 ```
-ุ8.Navigate to the backend directory and install additional dependencies:
+8.Navigate to the backend directory and install additional dependencies:
 ```bash
 
 cd backend
