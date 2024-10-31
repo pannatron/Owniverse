@@ -29,22 +29,27 @@ RELAYER_PRIVATE_KEY=your_relayer_private_key_here
 RPC_URL=https://rpc-testnet.bitkubchain.io
 CHAIN_ID=25925
 ```
-4.Install the required dependencies:
+4.Create a  `package.json ` File (if not already present): Ensure your project has a  `package.json ` by running:
 ```bash
 
-npm install
-
+npm init -y
 ```
-5.Compile the smart contracts using Hardhat:
-
+5.Install Hardhat: Install Hardhat as a development dependency:
 ```bash
-npx hardhat compile
 
+npm install --save-dev hardhat
 ```
-This will generate the `artifacts` folder and the necessary `OwniverseToken.json` file that you'll need for deployment.
+6.Install Hardhat Waffle and Ethers: Add the Hardhat plugins needed for contract development:
+```bash
 
+npm install --save-dev @nomiclabs/hardhat-waffle @nomiclabs/hardhat-ethers ethers
+```
+ึ7.Install OpenZeppelin Contracts: This is necessary for importing contract templates:
+```bash
 
-ุ6.Navigate to the backend directory and install additional dependencies:
+npm install @openzeppelin/contracts
+```
+ุ8.Navigate to the backend directory and install additional dependencies:
 ```bash
 
 cd backend
@@ -54,6 +59,16 @@ npm install --save-dev @nomiclabs/hardhat-waffle
 npm install --save-dev @nomiclabs/hardhat-ethers ethers
 
 ```
+
+9.Compile the smart contracts using Hardhat:
+
+```bash
+npx hardhat compile
+
+```
+This will generate the `artifacts` folder and the necessary `OwniverseToken.json` file that you'll need for deployment.
+
+
 
 # Running the Project
 ## Running the Backend
