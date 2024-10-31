@@ -1,6 +1,16 @@
 let web3;
 let userAddress;
 
+// ฟังก์ชันสำหรับแสดงสถานะการโหลด
+function showLoading(isLoading) {
+    const loadingIndicator = document.getElementById('loadingIndicator');
+    if (isLoading) {
+        loadingIndicator.style.display = 'block';
+    } else {
+        loadingIndicator.style.display = 'none';
+    }
+}
+
 // เชื่อมต่อ MetaMask
 async function connectMetaMask() {
     if (window.ethereum) {
@@ -13,9 +23,9 @@ async function connectMetaMask() {
             // แสดงที่อยู่ที่เชื่อมต่อ
             document.getElementById('userAddress').innerText = `Connected: ${userAddress}`;
             document.getElementById('mintButton').disabled = false; // เปิดใช้งานปุ่ม Mint
-
         } catch (error) {
             console.error('User rejected the request');
+            alert('Connection rejected by user.');
         }
     } else {
         alert('MetaMask not detected');
@@ -29,84 +39,58 @@ document.getElementById('tokenForm').onsubmit = async function (e) {
     const tokenSymbol = document.getElementById('tokenSymbol').value;
     const tokenLogo = document.getElementById('tokenLogo').value;
     const features = Array.from(document.getElementById('features').selectedOptions).map(opt => opt.value);
+
     console.log("Creating Token with:", { tokenName, tokenSymbol, tokenLogo, features });
 
-    document.getElementById('mintButton').disabled = true; // Disable ปุ่มเมื่อเริ่มการสร้าง token
+    if (!userAddress) {
+        alert('Please connect MetaMask first.');
+        return;
+    }
 
-    await createTokenOnBackend(tokenName, tokenSymbol, tokenLogo, features);
+    try {
+        // แสดงสถานะการโหลด
+        showLoading(true);
+        document.getElementById('mintButton').disabled = true; // Disable ปุ่มเมื่อเริ่มการสร้าง token
+
+        // เซ็นลายเซ็นก่อนสร้างโทเคน
+        const message = "I authorize the creation of this token";
+        const signature = await web3.eth.personal.sign(message, userAddress);
+        console.log("Signature:", signature);
+
+        await createTokenOnBackend(tokenName, tokenSymbol, tokenLogo, features, signature);
+
+    } catch (error) {
+        console.error("Error during token creation:", error);
+        alert("Error during token creation: " + error.message);
+    } finally {
+        document.getElementById('mintButton').disabled = false; // เปิดใช้งานปุ่มอีกครั้งเมื่อเสร็จสิ้น
+        showLoading(false);
+    }
 };
 
 // ส่งข้อมูลการสร้าง Token ไปยัง Backend
-async function createTokenOnBackend(tokenName, tokenSymbol, tokenLogo, features) {
+async function createTokenOnBackend(tokenName, tokenSymbol, tokenLogo, features, signature) {
     try {
         const response = await fetch('/api/createToken', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ tokenName, tokenSymbol, tokenLogo, features, userAddress })
+            body: JSON.stringify({ tokenName, tokenSymbol, tokenLogo, features, userAddress, signature })
         });
 
         const data = await response.json();
         console.log("Token created:", data);
 
-        if (data.tokenAddress) {
-            // แสดงที่อยู่เหรียญบนหน้าเว็บ
+        if (response.ok && data.tokenAddress) {
+            // แสดงที่อยู่เหรียญบนหน้าเว็บเมื่อการสร้างสำเร็จ
             const tokenLink = `https://testnet.bkcscan.com/address/${data.tokenAddress}`;
             document.getElementById('tokenAddress').innerHTML = 
-                `Token created! Address: <a href="${tokenLink}" target="_blank">${data.tokenAddress}</a>`;
-            
-            // ส่ง tokenAddress ไปยังฟังก์ชัน signTransaction
-            await signTransaction(data.tokenAddress);
+                `Token created successfully! Address: <a href="${tokenLink}" target="_blank">${data.tokenAddress}</a>`;
         } else {
-            throw new Error("Token address not found");
+            throw new Error("Token creation failed: " + (data.error || "Unknown error"));
         }
 
     } catch (error) {
         console.error("Error creating token:", error);
-    } finally {
-        document.getElementById('mintButton').disabled = false; // เปิดใช้งานปุ่มอีกครั้งเมื่อเสร็จสิ้น
-    }
-}
-
-// ฟังก์ชัน Mint เหรียญเพิ่มเติม
-async function mintMoreTokens() {
-    if (!userAddress) {
-        alert('Please connect MetaMask first.');
-        return;
-    }
-    console.log('Minting more tokens...');
-    // ส่งคำขอ Mint ไปยัง backend หรือสัญญาอัจฉริยะ
-}
-
-// ฟังก์ชันเซ็นลายเซ็น (Sign a message)
-async function signTransaction(tokenAddress) {
-    if (!userAddress) {
-        alert('Please connect MetaMask first.');
-        return;
-    }
-
-    const message = "I authorize this transaction";
-    try {
-        const signature = await web3.eth.personal.sign(message, userAddress);
-        console.log("Signature:", signature);
-
-        // ส่งลายเซ็นและข้อมูลไปให้ backend (Relayer)
-        const response = await fetch('/api/sendTransaction', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userAddress, signature, message, tokenAddress }) // ส่ง tokenAddress ด้วย
-        });
-
-        const result = await response.json();
-        console.log("Transaction result:", result);
-
-        if (response.ok) {
-            alert("Transaction sent successfully!");
-        } else {
-            alert("Transaction failed: " + result.error);
-        }
-
-    } catch (error) {
-        console.error("Error signing transaction:", error);
-        alert("Error signing transaction: " + error.message);
+        alert("Error creating token: " + error.message);
     }
 }
