@@ -17,33 +17,35 @@ contract OwniverseToken is ERC20, ERC20Burnable, ERC20Pausable, Ownable, Initial
     // ส่ง msg.sender เพื่อเป็นเจ้าของใน Ownable
     constructor() ERC20("Owniverse", "OWN") Ownable(msg.sender) {}
 
-function initialize(
-    string memory name_,
-    string memory symbol_,
-    uint256 initialSupply,
-    address developerAddress,
-    address userAddress,
-    bool mintable,
-    bool burnable,
-    bool upgradeable
-) public initializer {
-    require(developerAddress != address(0), "Developer address is required");
-    require(userAddress != address(0), "User address is required");
+    function initialize(
+        string memory name_,
+        string memory symbol_,
+        uint256 initialSupply,
+        address developerAddress,
+        address userAddress,
+        bool mintable,
+        bool burnable,
+        bool upgradeable
+    ) public initializer {
+        require(developerAddress != address(0), "Developer address is required");
+        require(userAddress != address(0), "User address is required");
+        require(bytes(name_).length > 0, "Token name is required");
+        require(bytes(symbol_).length > 0, "Token symbol is required");
 
-    // Mint initial supply directly to the user
-    _mint(userAddress, initialSupply * 10 ** decimals());
+        // Mint initial supply directly to the user
+        _mint(userAddress, initialSupply * 10 ** decimals());
 
+        _customName = name_;
+        _customSymbol = symbol_;
 
-    _customName = name_;
-    _customSymbol = symbol_;
+        _burnableEnabled = burnable;
+        _upgradeableEnabled = upgradeable;
 
-    _burnableEnabled = burnable;
-    _upgradeableEnabled = upgradeable;
-
-    if (!mintable) {
-        renounceOwnership();
+        if (!mintable) {
+            renounceOwnership();
+        }
     }
-}
+
 
     function mint(address to, uint256 amount) public onlyOwner {
         _mint(to, amount);
