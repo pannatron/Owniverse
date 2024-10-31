@@ -1,93 +1,114 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-const path = require('path'); // เพิ่มโมดูล path
+const path = require('path');
 const { ethers } = require("ethers");
 const Web3 = require('web3');
 const contractArtifact = require('../artifacts/contracts/Token.sol/OwniverseToken.json');
-const ABI = contractArtifact.abi; 
+const ABI = contractArtifact.abi;
 
 require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 
 const app = express();
 app.use(bodyParser.json());
 
-// ใช้ HttpProvider เพื่อเชื่อมต่อกับ RPC URL
-const web3 = new Web3(new Web3.providers.HttpProvider(process.env.RPC_URL));  // ใช้ URL จาก .env
+// Connect to RPC URL
+const web3 = new Web3(new Web3.providers.HttpProvider(process.env.RPC_URL));
 
-// เสิร์ฟไฟล์ static จากโฟลเดอร์ frontend
 app.use(express.static(path.join(__dirname, '../frontend')));
 
-// เสิร์ฟหน้าแรก (index.html)
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, '../frontend', 'index.html'));
 });
 
-// API สำหรับการสร้างโทเคน
-app.post('/api/createToken', async (req, res) => {
-    const { tokenName, tokenSymbol, tokenLogo, features, userAddress } = req.body;
-
-    try {
-        const tokenAddress = await deployTokenContract(tokenName, tokenSymbol, features, userAddress);
-        res.json({ tokenAddress });
-    } catch (error) {
-        console.error('Error deploying token:', error);
-        res.status(500).json({ error: 'Failed to create token' });
-    }
-});
-
 async function deployTokenContract(tokenName, tokenSymbol, features, userAddress) {
     const relayerPrivateKey = process.env.RELAYER_PRIVATE_KEY;
+    const developerAddress = process.env.DEV_PUBLIC_KEY;
+
     if (!relayerPrivateKey) {
         throw new Error('Relayer private key is undefined.');
     }
-    console.log('Relayer Private Key:', relayerPrivateKey);
+
+    if (!tokenName || !tokenSymbol || !userAddress) {
+        throw new Error('Invalid input data: missing tokenName, tokenSymbol, or userAddress.');
+    }
+
+    if (!ethers.utils.isAddress(userAddress)) {
+        throw new Error('Invalid Ethereum address.');
+    }
+
+    console.log('Deploying Token with:', { tokenName, tokenSymbol, userAddress });
 
     const provider = new ethers.providers.JsonRpcProvider(process.env.RPC_URL);
     const signer = new ethers.Wallet(relayerPrivateKey, provider);
 
-    console.log('RPC URL:', process.env.RPC_URL);
-
     const TokenFactory = new ethers.ContractFactory(contractArtifact.abi, contractArtifact.bytecode, signer);
-    const token = await TokenFactory.deploy();
-    await token.initialize(tokenName, tokenSymbol, 1000000, userAddress, 
-        features.includes('mintable'), features.includes('burnable'), features.includes('upgradeable'));
+    console.log('Relayer Private Key:', relayerPrivateKey);
+    console.log('Provider URL:', process.env.RPC_URL);
+    console.log('ABI:', ABI);
+    console.log('Contract deployment inputs:', { tokenName, tokenSymbol, userAddress, features });
 
+    // Deploy contract and initialize
+    const token = await TokenFactory.deploy();
     await token.deployed();
     console.log(`Token deployed at: ${token.address}`);
+    console.log('Initializing contract with:', {
+        tokenName, 
+        tokenSymbol, 
+        initialSupply: 1000000, 
+        developerAddress, 
+        userAddress,
+        mintable: features.includes('mintable'), 
+        burnable: features.includes('burnable'), 
+        upgradeable: features.includes('upgradeable')
+    });
+    
+    // Initialize contract
+    await token.initialize(
+        tokenName, 
+        tokenSymbol, 
+        1000000, 
+        developerAddress, 
+        userAddress, // เพิ่ม userAddress เข้าไป
+        features.includes('mintable'), 
+        features.includes('burnable'), 
+        features.includes('upgradeable'),
+        { gasLimit: 5000000 } // ตั้งค่า gas limit
+
+    );
+    
     return token.address;
 }
 
-// API สำหรับการสร้างโทเคน
 app.post('/api/createToken', async (req, res) => {
-    const { tokenName, tokenSymbol, tokenLogo, features, userAddress } = req.body;
+    const { tokenName, tokenSymbol, features, userAddress } = req.body;
 
     try {
+        console.log('Creating token with:', { tokenName, tokenSymbol, features, userAddress });
         const tokenAddress = await deployTokenContract(tokenName, tokenSymbol, features, userAddress);
-
-        // ส่งคืนที่อยู่ของโทเคนพร้อมข้อความเพิ่มเติม
-        res.json({ 
-            tokenAddress, 
-            message: `Token deployed successfully at address: ${tokenAddress}`
-        });
+        res.json({ tokenAddress, message: `Token deployed successfully at address: ${tokenAddress}` });
     } catch (error) {
         console.error('Error deploying token:', error);
-        res.status(500).json({ error: 'Failed to create token' });
+        res.status(500).json({ error: 'Failed to create token', details: error.message });
     }
 });
 
-
-// API สำหรับส่งธุรกรรม
-// API สำหรับส่งธุรกรรม
 app.post('/api/sendTransaction', async (req, res) => {
-    const { userAddress, signature, message, tokenAddress } = req.body; // รับ tokenAddress
+    const { userAddress, signature, message, tokenAddress } = req.body;
+
+    if (!userAddress || !signature || !message || !tokenAddress) {
+        return res.status(400).json({ error: 'Invalid input data' });
+    }
+
+    if (!ethers.utils.isAddress(userAddress) || !ethers.utils.isAddress(tokenAddress)) {
+        return res.status(400).json({ error: 'Invalid Ethereum address' });
+    }
 
     const signer = web3.eth.accounts.recover(message, signature);
     if (signer.toLowerCase() !== userAddress.toLowerCase()) {
         return res.status(400).json({ error: 'Invalid signature' });
     }
 
-    // ใช้ tokenAddress ที่ส่งมาจาก frontend
-    const contract = new web3.eth.Contract(ABI, tokenAddress); // ใช้ tokenAddress แทน 'contract_address'
+    const contract = new web3.eth.Contract(ABI, tokenAddress);
     const transactionData = contract.methods.mint(userAddress, 1000).encodeABI();
 
     try {
@@ -95,8 +116,8 @@ app.post('/api/sendTransaction', async (req, res) => {
         const signedTx = await web3.eth.accounts.signTransaction({
             to: tokenAddress,
             data: transactionData,
-            gas: 2000000,
-            gasPrice: web3.utils.toWei('50', 'gwei') // เพิ่ม gas price ที่สูงขึ้น
+            gas: 10000000,
+            gasPrice: web3.utils.toWei('50', 'gwei')
         }, relayerPrivateKey);
 
         web3.eth.sendSignedTransaction(signedTx.rawTransaction, { timeout: 10000 })
@@ -114,7 +135,6 @@ app.post('/api/sendTransaction', async (req, res) => {
     }
 });
 
-// เริ่มต้นเซิร์ฟเวอร์
 app.listen(3000, () => {
     console.log('Server running on port 3000');
 });
