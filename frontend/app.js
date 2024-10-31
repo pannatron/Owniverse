@@ -49,6 +49,11 @@ async function createTokenOnBackend(tokenName, tokenSymbol, tokenLogo, features)
         console.log("Token created:", data);
 
         if (data.tokenAddress) {
+            // แสดงที่อยู่เหรียญบนหน้าเว็บ
+            const tokenLink = `https://testnet.bkcscan.com/address/${data.tokenAddress}`;
+            document.getElementById('tokenAddress').innerHTML = 
+                `Token created! Address: <a href="${tokenLink}" target="_blank">${data.tokenAddress}</a>`;
+            
             // ส่ง tokenAddress ไปยังฟังก์ชัน signTransaction
             await signTransaction(data.tokenAddress);
         } else {
