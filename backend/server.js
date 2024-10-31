@@ -63,12 +63,18 @@ app.post('/api/createToken', async (req, res) => {
 
     try {
         const tokenAddress = await deployTokenContract(tokenName, tokenSymbol, features, userAddress);
-        res.json({ tokenAddress }); // ส่งคืนที่อยู่ของโทเคนไปยัง frontend
+
+        // ส่งคืนที่อยู่ของโทเคนพร้อมข้อความเพิ่มเติม
+        res.json({ 
+            tokenAddress, 
+            message: `Token deployed successfully at address: ${tokenAddress}`
+        });
     } catch (error) {
         console.error('Error deploying token:', error);
         res.status(500).json({ error: 'Failed to create token' });
     }
 });
+
 
 // API สำหรับส่งธุรกรรม
 app.post('/api/sendTransaction', async (req, res) => {
