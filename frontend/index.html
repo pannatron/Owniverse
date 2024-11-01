@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Create Your Token</title>
+    <title>Token Management</title>
 
     <!-- ลิงก์ไปยัง style.css -->
     <link rel="stylesheet" href="/style.css"> 
@@ -16,38 +16,134 @@
 </head>
 <body>
     <div class="container">
-        <h1>Create Your Token</h1>
+        <h1>Token Management</h1>
 
         <!-- ปุ่ม Connect MetaMask -->
         <button id="connectButton" onclick="connectMetaMask()">Connect MetaMask</button>
         <p id="userAddress"></p> <!-- แสดงที่อยู่ MetaMask ที่เชื่อมต่อ -->
 
-        <!-- ฟอร์มสร้างโทเคน -->
-        <form id="tokenForm">
-            <label for="tokenName">Token Name</label>
-            <input type="text" id="tokenName" placeholder="MyToken" required />
+        <!-- หน้าต่างเลือกการกระทำ -->
+        <div id="actionSelection">
+            <h2>Select an Action</h2>
+            <button onclick="showForm('createTokenForm')">Create New Token</button>
+            <button onclick="showForm('deployFunctionForm')">Deploy Additional Function</button>
+        </div>
 
-            <label for="tokenSymbol">Token Symbol</label>
-            <input type="text" id="tokenSymbol" placeholder="MTK" required />
+       <!-- ฟอร์มสร้างโทเคน -->
+<div id="createTokenForm" style="display:none;">
+    <h2>Create Your Token</h2>
+    <form id="tokenForm">
+        <label for="tokenName">Token Name</label>
+        <input type="text" id="tokenName" placeholder="MyToken" required />
+    
+        <label for="tokenSymbol">Token Symbol</label>
+        <input type="text" id="tokenSymbol" placeholder="MTK" required />
+    
+        <label for="tokenLogo">Token Logo (URL)</label>
+        <input type="text" id="tokenLogo" placeholder="https://example.com/logo.png" />
+    
+        <!-- ตัวเลือกสำหรับประเภทสัญญา -->
+        <fieldset>
+            <legend>Contract Type</legend>
+            <label>
+                <input type="radio" name="contractType" value="upgradeable" required />
+                Upgradeable
+            </label>
+            <label>
+                <input type="radio" name="contractType" value="non-upgradeable" required />
+                Non-upgradeable
+            </label>
+        </fieldset>
+    
+        <!-- ตัวเลือกสำหรับฟีเจอร์อื่นๆ -->
+        <label for="features">Features</label>
+        <select id="features" multiple>
+            <option value="mintable">Mintable</option>
+            <option value="burnable">Burnable</option>
+            <option value="pausable">Pausable</option>
+        </select>
 
-            <label for="tokenLogo">Token Logo (URL)</label>
-            <input type="text" id="tokenLogo" placeholder="https://example.com/logo.png" />
+        <!-- ตัวเลือกจำนวน Token -->
+        <label for="initialSupply">Initial Supply</label>
+        <select id="initialSupply" onchange="handleCustomSupplySelection()">
+            <option value="100000">100,000</option>
+            <option value="1000000">1,000,000</option>
+            <option value="10000000">10,000,000</option>
+            <option value="100000000">100,000,000</option>
+            <option value="1000000000">1,000,000,000</option>
+            <option value="custom">Custom</option>
+        </select>
+        <input type="number" id="customSupply" placeholder="Enter custom supply" style="display:none;" />
 
-            <label for="features">Features</label>
-            <select id="features" multiple>
-                <option value="upgradeable">Upgradeable</option>
-                <option value="mintable">Mintable</option>
-                <option value="burnable">Burnable</option>
-            </select>
+        <button type="submit">Create Token</button>
+    </form>
+    <button onclick="hideForm('createTokenForm')">Back</button>
+</div>
 
-            <button type="submit">Create Token</button>
-        </form>
+<script>
+    function handleCustomSupplySelection() {
+        const initialSupplySelect = document.getElementById('initialSupply');
+        const customSupplyInput = document.getElementById('customSupply');
+        if (initialSupplySelect.value === 'custom') {
+            customSupplyInput.style.display = 'block';
+            customSupplyInput.required = true;
+        } else {
+            customSupplyInput.style.display = 'none';
+            customSupplyInput.required = false;
+        }
+    }
+</script>
 
-        <!-- ปุ่ม Mint More Tokens -->
-        <button id="mintButton" onclick="mintMoreTokens()" disabled>Mint More Tokens</button>
-        <div id="tokenAddress"></div> <!-- เพิ่มส่วนนี้ในไฟล์ HTML เพื่อแสดงที่อยู่เหรียญ -->
+
+        <!-- ฟอร์ม deploy เพิ่มเติม -->
+<!-- ฟอร์ม deploy เพิ่มเติม -->
+<div id="deployFunctionForm" style="display:none;">
+    <h2>Deploy Additional Function</h2>
+    <label for="contractAddress">Contract Address</label>
+    <input type="text" id="contractAddress" placeholder="0x1234..." required />
+
+    <!-- ปุ่มเช็คที่อยู่ contract -->
+    <button onclick="checkContract()">Check Contract on Explorer</button>
+    <div id="explorerLink" style="margin-top: 10px;"></div>
+
+    <!-- เนื้อหาและปุ่มที่เกี่ยวข้องกับการ deploy ฟังก์ชันเพิ่มเติม -->
+    <p>Select a function to deploy or interact with your existing contract.</p>
+    <button onclick="deployMintFunction()">Deploy Mint Function</button>
+    <button onclick="deployBurnFunction()">Deploy Burn Function</button>
+    <button onclick="hideForm('deployFunctionForm')">Back</button>
+</div>
+
+<script>
+    function checkContract() {
+        const contractAddress = document.getElementById('contractAddress').value;
+        if (contractAddress) {
+            // แสดงลิงก์ไปยัง explorer
+            const explorerBaseURL = 'https://testnet.bkcscan.com/address/';
+            document.getElementById('explorerLink').innerHTML = 
+                `Check your contract: <a href="${explorerBaseURL}${contractAddress}" target="_blank">${contractAddress}</a>`;
+        } else {
+            alert('Please enter a valid contract address.');
+        }
+    }
+</script>
+
+        <!-- Loading Indicator -->
         <div id="loadingIndicator" style="display:none;">Loading...</div>
 
+        <!-- ที่อยู่โทเค็น -->
+        <div id="tokenAddress"></div> <!-- เพิ่มส่วนนี้ในไฟล์ HTML เพื่อแสดงที่อยู่เหรียญ -->
     </div>
+
+    <script>
+        function showForm(formId) {
+            document.getElementById('actionSelection').style.display = 'none';
+            document.getElementById(formId).style.display = 'block';
+        }
+
+        function hideForm(formId) {
+            document.getElementById(formId).style.display = 'none';
+            document.getElementById('actionSelection').style.display = 'block';
+        }
+    </script>
 </body>
 </html>
