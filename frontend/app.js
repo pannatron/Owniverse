@@ -16,16 +16,28 @@ async function connectMetaMask() {
     if (window.ethereum) {
         web3 = new Web3(window.ethereum);
         try {
-            const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
-            userAddress = accounts[0];
-            console.log('Connected:', userAddress);
-
-            // แสดงที่อยู่ที่เชื่อมต่อ
-            document.getElementById('userAddress').innerText = `Connected: ${userAddress}`;
-            document.getElementById('mintButton').disabled = false; // เปิดใช้งานปุ่ม Mint
+            // ตรวจสอบว่ามีการเชื่อมต่อแล้วหรือไม่
+            if (window.ethereum.selectedAddress) {
+                userAddress = window.ethereum.selectedAddress;
+                console.log('Already connected:', userAddress);
+                document.getElementById('userAddress').innerText = `Connected: ${userAddress}`;
+                document.getElementById('mintButton').disabled = false;
+            } else {
+                // ขอการอนุญาตจากผู้ใช้
+                const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
+                userAddress = accounts[0];
+                console.log('Connected:', userAddress);
+                document.getElementById('userAddress').innerText = `Connected: ${userAddress}`;
+                document.getElementById('mintButton').disabled = false;
+            }
         } catch (error) {
-            console.error('User rejected the request');
-            alert('Connection rejected by user.');
+            if (error.code === 4001) {
+                // ผู้ใช้ปฏิเสธการขออนุญาต
+                console.error('User rejected the request');
+                alert('Connection rejected by user.');
+            } else {
+                console.error('Error connecting to MetaMask:', error);
+            }
         }
     } else {
         alert('MetaMask not detected');
