@@ -48,7 +48,7 @@ document.getElementById('tokenForm').onsubmit = async function (e) {
     const tokenName = document.getElementById('tokenName').value;
     const tokenSymbol = document.getElementById('tokenSymbol').value;
     const tokenLogo = document.getElementById('tokenLogo').value;
-    const features = Array.from(document.getElementById('features').selectedOptions).map(opt => opt.value);
+    const features = Array.from(document.querySelectorAll('input[name="feature"]:checked')).map(checkbox => checkbox.value);
     
     // ดึงค่า initialSupply และ customSupply จากฟอร์ม
     let initialSupply = document.getElementById('initialSupply').value;
