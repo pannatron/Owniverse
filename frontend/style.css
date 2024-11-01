@@ -1,12 +1,50 @@
-body {
-    font-family: Arial, sans-serif;
-    margin: 20px;
-    padding: 20px;
+.feature-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    border: 1px solid #ccc;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 15px;
+    background-color: #f9f9f9;
 }
-h1 {
-    color: #333;
+
+.feature-item {
+    flex: 1 1 100px; /* ปรับขนาดให้แต่ละ item มีขนาดเท่ากัน */
+    display: flex;
+    align-items: center;
 }
-label, input {
-    display: block;
-    margin: 10px 0;
+
+.feature-item input {
+    margin-right: 5px;
+}
+.container form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.container label {
+    font-weight: bold;
+}
+
+input[type="text"], input[type="number"], select {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    margin-bottom: 10px;
+    width: 100%; /* ให้ input ขยายเต็มที่ */
+}
+
+button[type="submit"], button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    background-color: #007bff;
+    color: white;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #0056b3;
 }

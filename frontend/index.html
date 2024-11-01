@@ -56,12 +56,23 @@
         </fieldset>
     
         <!-- ตัวเลือกสำหรับฟีเจอร์อื่นๆ -->
-        <label for="features">Features</label>
-        <select id="features" multiple>
-            <option value="mintable">Mintable</option>
-            <option value="burnable">Burnable</option>
-            <option value="pausable">Pausable</option>
-        </select>
+        <!-- ตัวเลือกสำหรับฟีเจอร์อื่นๆ -->
+<label for="features">Features</label>
+<!-- ตัวเลือกสำหรับฟีเจอร์อื่นๆ -->
+<label for="features">Features</label>
+<div id="features" class="feature-container">
+    <label class="feature-item">
+        <input type="checkbox" name="feature" value="mintable"> Mintable
+    </label>
+    <label class="feature-item">
+        <input type="checkbox" name="feature" value="burnable"> Burnable
+    </label>
+    <label class="feature-item">
+        <input type="checkbox" name="feature" value="pausable"> Pausable
+    </label>
+</div>
+
+
 
         <!-- ตัวเลือกจำนวน Token -->
         <label for="initialSupply">Initial Supply</label>
