@@ -21,14 +21,12 @@ async function connectMetaMask() {
                 userAddress = window.ethereum.selectedAddress;
                 console.log('Already connected:', userAddress);
                 document.getElementById('userAddress').innerText = `Connected: ${userAddress}`;
-                document.getElementById('mintButton').disabled = false;
             } else {
                 // ขอการอนุญาตจากผู้ใช้
                 const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
                 userAddress = accounts[0];
                 console.log('Connected:', userAddress);
                 document.getElementById('userAddress').innerText = `Connected: ${userAddress}`;
-                document.getElementById('mintButton').disabled = false;
             }
         } catch (error) {
             if (error.code === 4001) {
@@ -51,8 +49,14 @@ document.getElementById('tokenForm').onsubmit = async function (e) {
     const tokenSymbol = document.getElementById('tokenSymbol').value;
     const tokenLogo = document.getElementById('tokenLogo').value;
     const features = Array.from(document.getElementById('features').selectedOptions).map(opt => opt.value);
-
-    console.log("Creating Token with:", { tokenName, tokenSymbol, tokenLogo, features });
+    
+    // ดึงค่า initialSupply และ customSupply จากฟอร์ม
+    let initialSupply = document.getElementById('initialSupply').value;
+    if (initialSupply === 'custom') {
+        initialSupply = document.getElementById('customSupply').value;
+    }
+    
+    console.log("Creating Token with:", { tokenName, tokenSymbol, tokenLogo, features, initialSupply });
 
     if (!userAddress) {
         alert('Please connect MetaMask first.');
@@ -62,31 +66,29 @@ document.getElementById('tokenForm').onsubmit = async function (e) {
     try {
         // แสดงสถานะการโหลด
         showLoading(true);
-        document.getElementById('mintButton').disabled = true; // Disable ปุ่มเมื่อเริ่มการสร้าง token
 
         // เซ็นลายเซ็นก่อนสร้างโทเคน
         const message = "I authorize the creation of this token";
         const signature = await web3.eth.personal.sign(message, userAddress);
         console.log("Signature:", signature);
 
-        await createTokenOnBackend(tokenName, tokenSymbol, tokenLogo, features, signature);
+        await createTokenOnBackend(tokenName, tokenSymbol, tokenLogo, features, initialSupply, signature);
 
     } catch (error) {
         console.error("Error during token creation:", error);
         alert("Error during token creation: " + error.message);
     } finally {
-        document.getElementById('mintButton').disabled = false; // เปิดใช้งานปุ่มอีกครั้งเมื่อเสร็จสิ้น
         showLoading(false);
     }
 };
 
 // ส่งข้อมูลการสร้าง Token ไปยัง Backend
-async function createTokenOnBackend(tokenName, tokenSymbol, tokenLogo, features, signature) {
+async function createTokenOnBackend(tokenName, tokenSymbol, tokenLogo, features, initialSupply, signature) {
     try {
         const response = await fetch('/api/createToken', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ tokenName, tokenSymbol, tokenLogo, features, userAddress, signature })
+            body: JSON.stringify({ tokenName, tokenSymbol, tokenLogo, features, initialSupply, userAddress, signature })
         });
 
         const data = await response.json();

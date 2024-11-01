@@ -24,20 +24,21 @@ app.get('/', (req, res) => {
 
 
 app.post('/api/createToken', async (req, res) => {
-    const { tokenName, tokenSymbol, features, userAddress } = req.body;
+    const { tokenName, tokenSymbol, features, userAddress, initialSupply } = req.body; // เพิ่ม initialSupply
     const relayerPrivateKey = process.env.RELAYER_PRIVATE_KEY;
     const developerAddress = process.env.DEV_PUBLIC_KEY;
     const provider = new ethers.providers.JsonRpcProvider(process.env.RPC_URL);
 
     try {
-        console.log('Creating token with:', { tokenName, tokenSymbol, features, userAddress });
-        const tokenAddress = await deployTokenContract(tokenName, tokenSymbol, features, userAddress,provider, relayerPrivateKey, developerAddress);
+        console.log('Creating token with:', { tokenName, tokenSymbol, features, userAddress, initialSupply });
+        const tokenAddress = await deployTokenContract(tokenName, tokenSymbol, features, initialSupply, userAddress, provider, relayerPrivateKey, developerAddress); // ส่ง initialSupply ไปด้วย
         res.json({ tokenAddress, message: `Token deployed successfully at address: ${tokenAddress}` });
     } catch (error) {
         console.error('Error deploying token:', error);
         res.status(500).json({ error: 'Failed to create token', details: error.message });
     }
 });
+
 
 app.post('/api/sendTransaction', async (req, res) => {
     const { userAddress, signature, message, tokenAddress } = req.body;
