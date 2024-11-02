@@ -138,7 +138,7 @@
         function checkContract() {
             const contractAddress = document.getElementById('contractAddress').value;
             if (contractAddress) {
-                const explorerBaseURL = 'https://testnet.bkcscan.com/address/';
+                const explorerBaseURL = 'https://testnet.bkcscan.com/token/';
                 document.getElementById('explorerLink').innerHTML = 
                     `Check your contract: <a href="${explorerBaseURL}${contractAddress}" target="_blank">${contractAddress}</a>`;
             } else {
