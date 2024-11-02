@@ -1,6 +1,18 @@
 const { ethers } = require("ethers");
-const contractArtifact = require('../artifacts/contracts/Token.sol/OwniverseToken.json');
-async function deployTokenContract(tokenName, tokenSymbol, features, initialSupply, userAddress, provider, relayerPrivateKey, developerAddress) {
+const UpgradeableContractArtifact = require('../artifacts/contracts/UpgradeableToken.sol/OwniverseToken.json');
+const NonUpgradeableContractArtifact = require('../artifacts/contracts/NonUpgradeableToken.sol/OwniverseToken.json');
+
+async function deployTokenContract(
+    tokenName,
+    tokenSymbol,
+    features,
+    initialSupply,
+    userAddress,
+    contractType,
+    provider,
+    relayerPrivateKey,
+    developerAddress
+) {
     if (!relayerPrivateKey) {
         throw new Error('Relayer private key is undefined.');
     }
@@ -13,14 +25,19 @@ async function deployTokenContract(tokenName, tokenSymbol, features, initialSupp
         throw new Error('Invalid Ethereum address.');
     }
 
-    console.log('Deploying Token with:', { tokenName, tokenSymbol, initialSupply, userAddress });
+    console.log('Deploying Token with:', { tokenName, tokenSymbol, initialSupply, userAddress, contractType });
 
     const signer = new ethers.Wallet(relayerPrivateKey, provider);
-    const TokenFactory = new ethers.ContractFactory(contractArtifact.abi, contractArtifact.bytecode, signer);
+    let TokenFactory, token;
 
-    const token = await TokenFactory.deploy();
+    // เลือก contract artifact ตาม contractType
+    const contractArtifact = contractType === 'upgradeable' ? UpgradeableContractArtifact : NonUpgradeableContractArtifact;
+    TokenFactory = new ethers.ContractFactory(contractArtifact.abi, contractArtifact.bytecode, signer);
+
+    // Deploy contract
+    token = await TokenFactory.deploy();
     await token.deployed();
-    console.log(`Token deployed at: ${token.address}`);
+    console.log(`${contractType === 'upgradeable' ? 'Upgradeable' : 'Non-Upgradeable'} Token deployed at: ${token.address}`);
 
     try {
         // Estimate gas for initialization
@@ -32,12 +49,12 @@ async function deployTokenContract(tokenName, tokenSymbol, features, initialSupp
             userAddress,
             features.includes('mintable'),
             features.includes('burnable'),
-            features.includes('upgradeable')
+            true
         );
-        
-        // เพิ่มค่า gas ไปอีก 20% เพื่อให้มั่นใจว่าพอเพียง
+
+        // เพิ่มค่า gas ไปอีก 20%
         const gasLimitWithBuffer = estimatedGas.mul(ethers.BigNumber.from(120)).div(ethers.BigNumber.from(100));
-        
+
         // Initialize contract
         await token.initialize(
             tokenName,
@@ -47,10 +64,10 @@ async function deployTokenContract(tokenName, tokenSymbol, features, initialSupp
             userAddress,
             features.includes('mintable'),
             features.includes('burnable'),
-            features.includes('upgradeable'),
+            true,
             { gasLimit: gasLimitWithBuffer }
         );
-        
+
         console.log('Contract initialized successfully');
     } catch (error) {
         console.error('Error initializing contract:', error);
