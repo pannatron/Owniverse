@@ -47,7 +47,8 @@ npm install --save-dev @nomiclabs/hardhat-waffle @nomiclabs/hardhat-ethers ether
 7.Install OpenZeppelin Contracts: This is necessary for importing contract templates:
 ```bash
 
-npm install @openzeppelin/contracts
+npm install @openzeppelin/contracts @openzeppelin/contracts-upgradeable
+
 ```
 8.Navigate to the backend directory and install additional dependencies:
 ```bash
