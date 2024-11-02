@@ -49,6 +49,8 @@ document.getElementById('tokenForm').onsubmit = async function (e) {
     const tokenSymbol = document.getElementById('tokenSymbol').value;
     const tokenLogo = document.getElementById('tokenLogo').value;
     const features = Array.from(document.querySelectorAll('input[name="feature"]:checked')).map(checkbox => checkbox.value);
+    // ดึงค่า contractType จากฟอร์ม
+    const contractType = document.querySelector('input[name="contractType"]:checked').value;
     
     // ดึงค่า initialSupply และ customSupply จากฟอร์ม
     let initialSupply = document.getElementById('initialSupply').value;
@@ -56,7 +58,7 @@ document.getElementById('tokenForm').onsubmit = async function (e) {
         initialSupply = document.getElementById('customSupply').value;
     }
     
-    console.log("Creating Token with:", { tokenName, tokenSymbol, tokenLogo, features, initialSupply });
+    console.log("Creating Token with:", { tokenName, tokenSymbol, tokenLogo, features, initialSupply, contractType });
 
     if (!userAddress) {
         alert('Please connect MetaMask first.');
@@ -72,7 +74,8 @@ document.getElementById('tokenForm').onsubmit = async function (e) {
         const signature = await web3.eth.personal.sign(message, userAddress);
         console.log("Signature:", signature);
 
-        await createTokenOnBackend(tokenName, tokenSymbol, tokenLogo, features, initialSupply, signature);
+        // ส่งข้อมูลไปยัง backend พร้อมประเภท contract
+        await createTokenOnBackend(tokenName, tokenSymbol, tokenLogo, features, initialSupply, signature, contractType);
 
     } catch (error) {
         console.error("Error during token creation:", error);
@@ -82,20 +85,19 @@ document.getElementById('tokenForm').onsubmit = async function (e) {
     }
 };
 
-// ส่งข้อมูลการสร้าง Token ไปยัง Backend
-async function createTokenOnBackend(tokenName, tokenSymbol, tokenLogo, features, initialSupply, signature) {
+// ส่งข้อมูลไปยัง backend พร้อมข้อมูลประเภท contract
+async function createTokenOnBackend(tokenName, tokenSymbol, tokenLogo, features, initialSupply, signature, contractType) {
     try {
         const response = await fetch('/api/createToken', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ tokenName, tokenSymbol, tokenLogo, features, initialSupply, userAddress, signature })
+            body: JSON.stringify({ tokenName, tokenSymbol, tokenLogo, features, initialSupply, userAddress, signature, contractType })
         });
 
         const data = await response.json();
         console.log("Token created:", data);
 
         if (response.ok && data.tokenAddress) {
-            // แสดงที่อยู่เหรียญบนหน้าเว็บเมื่อการสร้างสำเร็จ
             const tokenLink = `https://testnet.bkcscan.com/address/${data.tokenAddress}`;
             document.getElementById('tokenAddress').innerHTML = 
                 `Token created successfully! Address: <a href="${tokenLink}" target="_blank">${data.tokenAddress}</a>`;
