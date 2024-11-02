@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MIT
+
 pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
@@ -10,7 +11,7 @@ import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 contract OwniverseToken is ERC20, ERC20Burnable, ERC20Pausable, Ownable, Initializable {
 
     bool private _burnableEnabled;
-    bool private _upgradeableEnabled;
+    bool private _updatableEnabled; // ตัวแปรใหม่สำหรับเช็คว่าฟีเจอร์อัปเดตชื่อและสัญลักษณ์เปิดใช้งานหรือไม่
     string private _customName;
     string private _customSymbol;
 
@@ -25,7 +26,7 @@ contract OwniverseToken is ERC20, ERC20Burnable, ERC20Pausable, Ownable, Initial
         address userAddress,
         bool mintable,
         bool burnable,
-        bool upgradeable
+        bool updatable // เพิ่มพารามิเตอร์สำหรับกำหนดว่าอัปเดตชื่อและสัญลักษณ์ได้หรือไม่
     ) public initializer {
         require(developerAddress != address(0), "Developer address is required");
         require(userAddress != address(0), "User address is required");
@@ -39,13 +40,13 @@ contract OwniverseToken is ERC20, ERC20Burnable, ERC20Pausable, Ownable, Initial
         _customSymbol = symbol_;
 
         _burnableEnabled = burnable;
-        _upgradeableEnabled = upgradeable;
+        _updatableEnabled = updatable; // กำหนดค่าเริ่มต้นของตัวแปรเช็ค
+        transferOwnership(userAddress);
 
         if (!mintable) {
             renounceOwnership();
         }
     }
-
 
     function mint(address to, uint256 amount) public onlyOwner {
         _mint(to, amount);
@@ -56,8 +57,10 @@ contract OwniverseToken is ERC20, ERC20Burnable, ERC20Pausable, Ownable, Initial
         super.burn(amount);
     }
 
-    function upgradeToken(string memory newName, string memory newSymbol) public onlyOwner {
-        require(_upgradeableEnabled, "Upgrading is disabled for this token");
+    function updateTokenDetails(string memory newName, string memory newSymbol) public onlyOwner {
+        require(_updatableEnabled, "Updating token details is disabled");
+        require(bytes(newName).length > 0, "New token name is required");
+        require(bytes(newSymbol).length > 0, "New token symbol is required");
         _customName = newName;
         _customSymbol = newSymbol;
     }
