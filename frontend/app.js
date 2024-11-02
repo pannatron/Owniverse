@@ -115,3 +115,133 @@ async function createTokenOnBackend(tokenName, tokenSymbol, tokenLogo, features,
         alert("Error creating token: " + error.message);
     }
 }
+
+// ฟังก์ชันสำหรับ Mint Token
+async function mintTokens() {
+    const contractAddress = document.getElementById('contractAddress').value;
+    const mintAmount = document.getElementById('mintAmount').value;
+
+    if (!userAddress || !web3) {
+        alert('Please connect MetaMask first.');
+        return;
+    }
+
+    if (!contractAddress || !mintAmount) {
+        alert('Please enter contract address and amount to mint.');
+        return;
+    }
+
+    try {
+        showLoading(true);
+
+        const message = `I authorize minting ${mintAmount} tokens to ${contractAddress}`;
+        const signature = await web3.eth.personal.sign(message, userAddress);
+
+        const response = await fetch('/api/mintToken', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ contractAddress, mintAmount, userAddress, signature })
+        });
+
+        const data = await response.json();
+        console.log("Mint result:", data);
+
+        if (response.ok) {
+            alert(`Minted ${mintAmount} tokens successfully!`);
+        } else {
+            throw new Error(data.error || 'Minting failed');
+        }
+    } catch (error) {
+        console.error("Error minting tokens:", error);
+        alert("Error minting tokens: " + error.message);
+    } finally {
+        showLoading(false);
+    }
+}
+
+// ฟังก์ชันสำหรับ Burn Token
+async function burnTokens() {
+    const contractAddress = document.getElementById('contractAddress').value;
+    const burnAmount = document.getElementById('burnAmount').value;
+
+    if (!userAddress || !web3) {
+        alert('Please connect MetaMask first.');
+        return;
+    }
+
+    if (!contractAddress || !burnAmount) {
+        alert('Please enter contract address and amount to burn.');
+        return;
+    }
+
+    try {
+        showLoading(true);
+
+        const message = `I authorize burning ${burnAmount} tokens from ${contractAddress}`;
+        const signature = await web3.eth.personal.sign(message, userAddress);
+
+        const response = await fetch('/api/burnToken', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ contractAddress, burnAmount, userAddress, signature })
+        });
+
+        const data = await response.json();
+        console.log("Burn result:", data);
+
+        if (response.ok) {
+            alert(`Burned ${burnAmount} tokens successfully!`);
+        } else {
+            throw new Error(data.error || 'Burning failed');
+        }
+    } catch (error) {
+        console.error("Error burning tokens:", error);
+        alert("Error burning tokens: " + error.message);
+    } finally {
+        showLoading(false);
+    }
+}
+
+// ฟังก์ชันสำหรับอัปเดตชื่อและสัญลักษณ์ Token
+async function updateTokenDetails() {
+    const contractAddress = document.getElementById('contractAddress').value;
+    const newTokenName = document.getElementById('newTokenName').value;
+    const newTokenSymbol = document.getElementById('newTokenSymbol').value;
+
+    if (!userAddress || !web3) {
+        alert('Please connect MetaMask first.');
+        return;
+    }
+
+    if (!contractAddress || !newTokenName || !newTokenSymbol) {
+        alert('Please enter contract address, new token name, and new token symbol.');
+        return;
+    }
+
+    try {
+        showLoading(true);
+
+        const message = `I authorize updating token details for ${contractAddress}`;
+        const signature = await web3.eth.personal.sign(message, userAddress);
+
+        const response = await fetch('/api/updateTokenDetails', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ contractAddress, newTokenName, newTokenSymbol, userAddress, signature })
+        });
+
+        const data = await response.json();
+        console.log("Update result:", data);
+
+        if (response.ok) {
+            alert(`Token details updated successfully!`);
+        } else {
+            throw new Error(data.error || 'Update failed');
+        }
+    } catch (error) {
+        console.error("Error updating token details:", error);
+        alert("Error updating token details: " + error.message);
+    } finally {
+        showLoading(false);
+    }
+}
