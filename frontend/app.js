@@ -12,19 +12,23 @@ function showLoading(isLoading) {
 }
 
 // เชื่อมต่อ MetaMask
+// เชื่อมต่อ MetaMask
 async function connectMetaMask() {
     if (window.ethereum) {
         web3 = new Web3(window.ethereum);
         try {
-            // ตรวจสอบว่ามีการเชื่อมต่อแล้วหรือไม่
-            if (window.ethereum.selectedAddress) {
-                userAddress = window.ethereum.selectedAddress;
+            // ขอการอนุญาตจากผู้ใช้และตรวจสอบว่ามีบัญชีที่เชื่อมต่อหรือไม่
+            const accounts = await ethereum.request({ method: 'eth_accounts' });
+            
+            if (accounts.length > 0) {
+                // หากมีบัญชีที่เชื่อมต่ออยู่แล้ว
+                userAddress = accounts[0];
                 console.log('Already connected:', userAddress);
                 document.getElementById('userAddress').innerText = `Connected: ${userAddress}`;
             } else {
-                // ขอการอนุญาตจากผู้ใช้
-                const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
-                userAddress = accounts[0];
+                // ขอการเชื่อมต่อจากผู้ใช้
+                const newAccounts = await ethereum.request({ method: 'eth_requestAccounts' });
+                userAddress = newAccounts[0];
                 console.log('Connected:', userAddress);
                 document.getElementById('userAddress').innerText = `Connected: ${userAddress}`;
             }
@@ -41,6 +45,7 @@ async function connectMetaMask() {
         alert('MetaMask not detected');
     }
 }
+
 
 // สร้างโทเคนใหม่
 document.getElementById('tokenForm').onsubmit = async function (e) {
