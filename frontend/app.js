@@ -235,3 +235,90 @@ async function burnTokensUsingMetaMask() {
         showLoading(false);
     }
 }
+async function pauseToken() {
+    if (!userAddress || !web3) {
+        alert('Please connect MetaMask first.');
+        return;
+    }
+
+    try {
+        showLoading(true);
+
+        const abi = [
+            {
+                "constant": false,
+                "inputs": [],
+                "name": "pause",
+                "outputs": [],
+                "type": "function"
+            }
+        ];
+        const contractAddress = document.getElementById('contractAddress').value;
+        const contract = new web3.eth.Contract(abi, contractAddress);
+
+        await contract.methods.pause()
+            .send({ from: userAddress, gas: 3000000 })
+            .on('transactionHash', function(hash) {
+                console.log('Transaction hash:', hash);
+                alert(`Transaction sent! Hash: ${hash}`);
+            })
+            .on('receipt', function(receipt) {
+                console.log('Transaction receipt:', receipt);
+                alert('Token paused successfully!');
+            })
+            .on('error', function(error) {
+                console.error('Error pausing token:', error);
+                alert('Error pausing token: ' + error.message);
+            });
+    } catch (error) {
+        console.error("Error pausing token:", error);
+        alert("Error pausing token: " + error.message);
+    } finally {
+        showLoading(false);
+    }
+}
+
+async function unpauseToken() {
+    if (!userAddress || !web3) {
+        alert('Please connect MetaMask first.');
+        return;
+    }
+
+    try {
+        showLoading(true);
+
+        const abi = [
+            {
+                "constant": false,
+                "inputs": [],
+                "name": "unpause",
+                "outputs": [],
+                "type": "function"
+            }
+        ];
+        const contractAddress = document.getElementById('contractAddress').value;
+        const contract = new web3.eth.Contract(abi, contractAddress);
+
+        await contract.methods.unpause()
+            .send({ from: userAddress, gas: 3000000 })
+            .on('transactionHash', function(hash) {
+                console.log('Transaction hash:', hash);
+                alert(`Transaction sent! Hash: ${hash}`);
+            })
+            .on('receipt', function(receipt) {
+                console.log('Transaction receipt:', receipt);
+                alert('Token unpaused successfully!');
+            })
+            .on('error', function(error) {
+                console.error('Error unpausing token:', error);
+                alert('Error unpausing token: ' + error.message);
+            });
+    } catch (error) {
+        console.error("Error unpausing token:", error);
+        alert("Error unpausing token: " + error.message);
+    } finally {
+        showLoading(false);
+    }
+}
+
+
