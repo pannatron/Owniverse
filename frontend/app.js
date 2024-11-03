@@ -155,7 +155,7 @@ async function mintTokensUsingMetaMask() {
 
         // เรียกใช้ MetaMask เพื่อทำธุรกรรม
         await contract.methods.mint(userAddress, web3.utils.toWei(mintAmount, 'ether'))
-            .send({ from: userAddress })
+            .send({ from: userAddress, gas: 3000000 })
             .on('transactionHash', function(hash) {
                 console.log('Transaction hash:', hash);
                 alert(`Transaction sent! Hash: ${hash}`);
@@ -231,51 +231,6 @@ async function burnTokensUsingMetaMask() {
     } catch (error) {
         console.error("Error burning tokens:", error);
         alert("Error burning tokens: " + error.message);
-    } finally {
-        showLoading(false);
-    }
-}
-
-
-// ฟังก์ชันสำหรับอัปเดตชื่อและสัญลักษณ์ Token
-async function updateTokenDetails() {
-    const contractAddress = document.getElementById('contractAddress').value;
-    const newTokenName = document.getElementById('newTokenName').value;
-    const newTokenSymbol = document.getElementById('newTokenSymbol').value;
-
-    if (!userAddress || !web3) {
-        alert('Please connect MetaMask first.');
-        return;
-    }
-
-    if (!contractAddress || !newTokenName || !newTokenSymbol) {
-        alert('Please enter contract address, new token name, and new token symbol.');
-        return;
-    }
-
-    try {
-        showLoading(true);
-
-        const message = `I authorize updating token details for ${contractAddress}`;
-        const signature = await web3.eth.personal.sign(message, userAddress);
-
-        const response = await fetch('/api/updateTokenDetails', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ contractAddress, newTokenName, newTokenSymbol, userAddress, signature })
-        });
-
-        const data = await response.json();
-        console.log("Update result:", data);
-
-        if (response.ok) {
-            alert(`Token details updated successfully!`);
-        } else {
-            throw new Error(data.error || 'Update failed');
-        }
-    } catch (error) {
-        console.error("Error updating token details:", error);
-        alert("Error updating token details: " + error.message);
     } finally {
         showLoading(false);
     }
