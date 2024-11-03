@@ -47,6 +47,8 @@
                     <label><input type="checkbox" name="feature" value="mintable"> Mintable</label>
                     <label><input type="checkbox" name="feature" value="burnable"> Burnable</label>
                     <label><input type="checkbox" name="feature" value="pausable"> Pausable</label>
+                    <label><input type="checkbox" name="feature" value="renameable"> Editable Name and Symbol</label>
+
                 </div>
 
                 <label for="initialSupply">Initial Supply</label>
@@ -65,7 +67,6 @@
             <button onclick="hideForm('createTokenForm')" style="margin-top: 20px;">Back</button>
         </div>
 
-        <!-- ฟอร์ม deploy เพิ่มเติม -->
         <div id="deployFunctionForm" style="display:none;">
             <h2>Deploy Additional Function</h2>
             <label for="contractAddress">Contract Address</label>
@@ -74,27 +75,36 @@
             <div id="explorerLink" style="margin-top: 10px;"></div>
             
             <div id="featureZone" style="margin-top: 20px;">
-                <button onclick="toggleFeatureForm('mintForm')" style="margin-bottom: 10px;">Mint Tokens</button>
-                <button onclick="toggleFeatureForm('burnForm')" style="margin-bottom: 10px;">Burn Tokens</button>
-                <button onclick="toggleFeatureForm('updateDetailsForm')" style="margin-bottom: 10px;">Update Token Details</button>
+                <button onclick="toggleFeatureForm('mintForm')" class="feature-button" style="margin-bottom: 10px;">Mint Tokens</button>
+                <button onclick="toggleFeatureForm('burnForm')" class="feature-button" style="margin-bottom: 10px;">Burn Tokens</button>
+                <button onclick="toggleFeatureForm('updateDetailsForm')" class="feature-button" style="margin-bottom: 10px;">Update Token Details</button>
+                <button onclick="toggleFeatureForm('pauseControl')" class="feature-button" style="margin-bottom: 10px;">Pause/Unpause Tokens</button>
             </div>
-
+        
+            <!-- ฟอร์ม Pause/Unpause Control -->
+            <div id="pauseControl" class="feature-form" style="display:none; margin-top: 15px;">
+                <h3>Pause Control</h3>
+                <button id="pauseButton" onclick="setActiveButton('pauseButton', 'unpauseButton'); pauseToken();" class="action-button" style="margin-bottom: 10px;">Pause Token</button>
+                <button id="unpauseButton" onclick="setActiveButton('unpauseButton', 'pauseButton'); unpauseToken();" class="action-button" style="margin-bottom: 10px;">Unpause Token</button>
+            </div>
+            
+        
             <!-- ฟอร์ม Mint Tokens -->
             <div id="mintForm" class="feature-form" style="display:none; margin-top: 15px;">
                 <h3>Mint Tokens</h3>
                 <label for="mintAmount">Amount</label>
                 <input type="number" id="mintAmount" placeholder="Amount">
-                <button onclick="mintTokensUsingMetaMask()">Mint</button>
+                <button onclick="mintTokensUsingMetaMask()" class="action-button">Mint</button>
             </div>
-
+        
             <!-- ฟอร์ม Burn Tokens -->
             <div id="burnForm" class="feature-form" style="display:none; margin-top: 15px;">
                 <h3>Burn Tokens</h3>
                 <label for="burnAmount">Amount</label>
                 <input type="number" id="burnAmount" placeholder="Amount">
-                <button onclick="burnTokensUsingMetaMask()">Burn</button>
+                <button onclick="burnTokensUsingMetaMask()" class="action-button">Burn</button>
             </div>
-
+        
             <!-- ฟอร์ม Update Token Details -->
             <div id="updateDetailsForm" class="feature-form" style="display:none; margin-top: 15px;">
                 <h3>Update Token Details</h3>
@@ -102,11 +112,13 @@
                 <input type="text" id="newTokenName" placeholder="New Token Name">
                 <label for="newTokenSymbol">New Token Symbol</label>
                 <input type="text" id="newTokenSymbol" placeholder="New Token Symbol">
-                <button onclick="updateTokenDetails()">Update Details</button>
+                <button onclick="updateTokenDetails()" class="action-button">Update Details</button>
             </div>
-
+            
             <button onclick="hideForm('deployFunctionForm')" style="margin-top: 20px;">Back</button>
         </div>
+        
+        
 
         <div id="loadingIndicator" style="display:none;">Loading...</div>
         <div id="tokenAddress"></div>
@@ -156,6 +168,25 @@
                 selectedForm.style.display = 'block';
             }
         }
+        function toggleFeatureForm(formId) {
+            // ซ่อนฟอร์มทั้งหมดก่อน
+            const allForms = document.querySelectorAll('.feature-form');
+            allForms.forEach(form => form.style.display = 'none');
+            
+            // แสดงฟอร์มที่ต้องการ
+            const selectedForm = document.getElementById(formId);
+            if (selectedForm) {
+                selectedForm.style.display = 'block';
+            }
+        }
+        function setActiveButton(activeId, inactiveId) {
+            // ลบคลาส active จากปุ่มที่ไม่ได้กด
+            document.getElementById(inactiveId).classList.remove('active');
+            
+            // เพิ่มคลาส active ให้กับปุ่มที่ถูกกด
+            document.getElementById(activeId).classList.add('active');
+        }
+        
         
     </script>
 </body>
