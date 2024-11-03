@@ -177,8 +177,8 @@ async function mintTokensUsingMetaMask() {
 }
 
 
-// ฟังก์ชันสำหรับ Burn Token
-async function burnTokens() {
+// ฟังก์ชันสำหรับ Burn Token โดยใช้ MetaMask โดยตรง
+async function burnTokensUsingMetaMask() {
     const contractAddress = document.getElementById('contractAddress').value;
     const burnAmount = document.getElementById('burnAmount').value;
 
@@ -193,25 +193,41 @@ async function burnTokens() {
     }
 
     try {
+        // ตรวจสอบและแปลงที่อยู่ให้เป็นรูปแบบ checksum
+        const validAddress = web3.utils.toChecksumAddress(contractAddress);
+
         showLoading(true);
 
-        const message = `I authorize burning ${burnAmount} tokens from ${contractAddress}`;
-        const signature = await web3.eth.personal.sign(message, userAddress);
+        // กำหนด ABI ของฟังก์ชัน burn (ควรมีการปรับให้ตรงกับ smart contract จริงของคุณ)
+        const abi = [
+            {
+                "constant": false,
+                "inputs": [
+                    { "name": "_amount", "type": "uint256" }
+                ],
+                "name": "burn",
+                "outputs": [],
+                "type": "function"
+            }
+        ];
 
-        const response = await fetch('/api/burnToken', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ contractAddress, burnAmount, userAddress, signature })
-        });
+        const contract = new web3.eth.Contract(abi, validAddress);
 
-        const data = await response.json();
-        console.log("Burn result:", data);
-
-        if (response.ok) {
-            alert(`Burned ${burnAmount} tokens successfully!`);
-        } else {
-            throw new Error(data.error || 'Burning failed');
-        }
+        // เรียกใช้ MetaMask เพื่อทำธุรกรรม
+        await contract.methods.burn(web3.utils.toWei(burnAmount, 'ether'))
+            .send({ from: userAddress , gas: 3000000 })
+            .on('transactionHash', function(hash) {
+                console.log('Transaction hash:', hash);
+                alert(`Transaction sent! Hash: ${hash}`);
+            })
+            .on('receipt', function(receipt) {
+                console.log('Transaction receipt:', receipt);
+                alert('Burned tokens successfully!');
+            })
+            .on('error', function(error) {
+                console.error('Error burning tokens:', error);
+                alert('Error burning tokens: ' + error.message);
+            });
     } catch (error) {
         console.error("Error burning tokens:", error);
         alert("Error burning tokens: " + error.message);
@@ -219,6 +235,7 @@ async function burnTokens() {
         showLoading(false);
     }
 }
+
 
 // ฟังก์ชันสำหรับอัปเดตชื่อและสัญลักษณ์ Token
 async function updateTokenDetails() {
