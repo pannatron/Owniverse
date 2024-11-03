@@ -11,11 +11,12 @@ import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 contract OwniverseToken is ERC20, ERC20Burnable, ERC20Pausable, Ownable, Initializable {
 
     bool private _burnableEnabled;
-    bool private _updatableEnabled; // ตัวแปรใหม่สำหรับเช็คว่าฟีเจอร์อัปเดตชื่อและสัญลักษณ์เปิดใช้งานหรือไม่
+    bool private _mintableEnabled;
+    bool private _pausableEnabled; 
+    bool private _updatableEnabled;
     string private _customName;
     string private _customSymbol;
 
-    // ส่ง msg.sender เพื่อเป็นเจ้าของใน Ownable
     constructor() ERC20("Owniverse", "OWN") Ownable(msg.sender) {}
 
     function initialize(
@@ -26,21 +27,23 @@ contract OwniverseToken is ERC20, ERC20Burnable, ERC20Pausable, Ownable, Initial
         address userAddress,
         bool mintable,
         bool burnable,
-        bool updatable // เพิ่มพารามิเตอร์สำหรับกำหนดว่าอัปเดตชื่อและสัญลักษณ์ได้หรือไม่
+        bool updatable,
+        bool pausable // เพิ่มพารามิเตอร์สำหรับกำหนดว่า pause/unpause ได้หรือไม่
     ) public initializer {
         require(developerAddress != address(0), "Developer address is required");
         require(userAddress != address(0), "User address is required");
         require(bytes(name_).length > 0, "Token name is required");
         require(bytes(symbol_).length > 0, "Token symbol is required");
 
-        // Mint initial supply directly to the user
         _mint(userAddress, initialSupply * 10 ** decimals());
 
         _customName = name_;
         _customSymbol = symbol_;
 
         _burnableEnabled = burnable;
-        _updatableEnabled = updatable; // กำหนดค่าเริ่มต้นของตัวแปรเช็ค
+        _mintableEnabled = mintable;
+        _updatableEnabled = updatable;
+        _pausableEnabled = pausable; // กำหนดค่าเริ่มต้นของตัวแปร
         transferOwnership(userAddress);
 
         if (!mintable) {
@@ -49,6 +52,7 @@ contract OwniverseToken is ERC20, ERC20Burnable, ERC20Pausable, Ownable, Initial
     }
 
     function mint(address to, uint256 amount) public onlyOwner {
+        require(_mintableEnabled, "Minting is disabled for this token");
         _mint(to, amount);
     }
 
@@ -74,10 +78,12 @@ contract OwniverseToken is ERC20, ERC20Burnable, ERC20Pausable, Ownable, Initial
     }
 
     function pause() public onlyOwner {
+        require(_pausableEnabled, "Pausing is disabled for this token");
         _pause();
     }
 
     function unpause() public onlyOwner {
+        require(_pausableEnabled, "Unpausing is disabled for this token");
         _unpause();
     }
 
