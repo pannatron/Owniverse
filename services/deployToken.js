@@ -49,8 +49,8 @@ async function deployTokenContract(
             userAddress,
             features.includes('mintable'),
             features.includes('burnable'),
-            features.includes('pausable'),
             features.includes('renameable'),
+            features.includes('pausable')
         );
 
         // เพิ่มค่า gas ไปอีก 20%
@@ -65,8 +65,8 @@ async function deployTokenContract(
             userAddress,
             features.includes('mintable'),
             features.includes('burnable'),
-            features.includes('pausable'),
             features.includes('renameable'),
+            features.includes('pausable'),
             { gasLimit: gasLimitWithBuffer }
         );
 
