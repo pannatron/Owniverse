@@ -116,8 +116,8 @@ async function createTokenOnBackend(tokenName, tokenSymbol, tokenLogo, features,
     }
 }
 
-// ฟังก์ชันสำหรับ Mint Token
-async function mintTokens() {
+// ฟังก์ชันสำหรับ Mint Token โดยใช้ MetaMask โดยตรง
+async function mintTokensUsingMetaMask() {
     const contractAddress = document.getElementById('contractAddress').value;
     const mintAmount = document.getElementById('mintAmount').value;
 
@@ -132,25 +132,42 @@ async function mintTokens() {
     }
 
     try {
+        // ตรวจสอบและแปลงที่อยู่ให้เป็นรูปแบบ checksum
+        const validAddress = web3.utils.toChecksumAddress(contractAddress);
+
         showLoading(true);
 
-        const message = `I authorize minting ${mintAmount} tokens to ${contractAddress}`;
-        const signature = await web3.eth.personal.sign(message, userAddress);
+        // กำหนด ABI ของฟังก์ชัน mint (ควรมีการปรับให้ตรงกับ smart contract จริงของคุณ)
+        const abi = [
+            {
+                "constant": false,
+                "inputs": [
+                    { "name": "_to", "type": "address" },
+                    { "name": "_amount", "type": "uint256" }
+                ],
+                "name": "mint",
+                "outputs": [],
+                "type": "function"
+            }
+        ];
 
-        const response = await fetch('/api/mintToken', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ contractAddress, mintAmount, userAddress, signature })
-        });
+        const contract = new web3.eth.Contract(abi, validAddress);
 
-        const data = await response.json();
-        console.log("Mint result:", data);
-
-        if (response.ok) {
-            alert(`Minted ${mintAmount} tokens successfully!`);
-        } else {
-            throw new Error(data.error || 'Minting failed');
-        }
+        // เรียกใช้ MetaMask เพื่อทำธุรกรรม
+        await contract.methods.mint(userAddress, web3.utils.toWei(mintAmount, 'ether'))
+            .send({ from: userAddress })
+            .on('transactionHash', function(hash) {
+                console.log('Transaction hash:', hash);
+                alert(`Transaction sent! Hash: ${hash}`);
+            })
+            .on('receipt', function(receipt) {
+                console.log('Transaction receipt:', receipt);
+                alert('Minted tokens successfully!');
+            })
+            .on('error', function(error) {
+                console.error('Error minting tokens:', error);
+                alert('Error minting tokens: ' + error.message);
+            });
     } catch (error) {
         console.error("Error minting tokens:", error);
         alert("Error minting tokens: " + error.message);
@@ -158,6 +175,7 @@ async function mintTokens() {
         showLoading(false);
     }
 }
+
 
 // ฟังก์ชันสำหรับ Burn Token
 async function burnTokens() {
