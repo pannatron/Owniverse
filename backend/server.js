@@ -49,7 +49,92 @@ app.post('/api/createToken', async (req, res) => {
         res.status(500).json({ error: 'Failed to create token', details: error.message });
     }
 });
+// Endpoints สำหรับ Mint Token
+app.post('/api/mintToken', async (req, res) => {
+    const { contractAddress, mintAmount, userAddress, signature } = req.body;
+    
+    if (!contractAddress || !mintAmount || !userAddress || !signature) {
+        return res.status(400).json({ error: 'Invalid request data' });
+    }
 
+    try {
+        // ตรวจสอบลายเซ็น
+        const signer = ethers.utils.verifyMessage(`I authorize minting ${mintAmount} tokens to ${contractAddress}`, signature);
+        if (signer.toLowerCase() !== userAddress.toLowerCase()) {
+            return res.status(401).json({ error: 'Invalid signature' });
+        }
+
+        // เรียก contract function สำหรับ mint
+        const contract = new ethers.Contract(contractAddress, [
+            // ใส่ ABI ของฟังก์ชัน mint ที่เกี่ยวข้อง
+            'function mint(address to, uint256 amount) public'
+        ], wallet);
+
+        const tx = await contract.mint(userAddress, ethers.utils.parseUnits(mintAmount, 18));
+        await tx.wait();
+        
+        res.status(200).json({ message: 'Mint successful', txHash: tx.hash });
+    } catch (error) {
+        console.error('Error minting tokens:', error);
+        res.status(500).json({ error: 'Failed to mint tokens', details: error.message });
+    }
+});
+
+// Endpoints สำหรับ Burn Token
+app.post('/api/burnToken', async (req, res) => {
+    const { contractAddress, burnAmount, userAddress, signature } = req.body;
+
+    if (!contractAddress || !burnAmount || !userAddress || !signature) {
+        return res.status(400).json({ error: 'Invalid request data' });
+    }
+
+    try {
+        const signer = ethers.utils.verifyMessage(`I authorize burning ${burnAmount} tokens from ${contractAddress}`, signature);
+        if (signer.toLowerCase() !== userAddress.toLowerCase()) {
+            return res.status(401).json({ error: 'Invalid signature' });
+        }
+
+        const contract = new ethers.Contract(contractAddress, [
+            'function burn(uint256 amount) public'
+        ], wallet);
+
+        const tx = await contract.burn(ethers.utils.parseUnits(burnAmount, 18));
+        await tx.wait();
+
+        res.status(200).json({ message: 'Burn successful', txHash: tx.hash });
+    } catch (error) {
+        console.error('Error burning tokens:', error);
+        res.status(500).json({ error: 'Failed to burn tokens', details: error.message });
+    }
+});
+
+// Endpoints สำหรับอัปเดตชื่อและสัญลักษณ์ Token
+app.post('/api/updateTokenDetails', async (req, res) => {
+    const { contractAddress, newTokenName, newTokenSymbol, userAddress, signature } = req.body;
+
+    if (!contractAddress || !newTokenName || !newTokenSymbol || !userAddress || !signature) {
+        return res.status(400).json({ error: 'Invalid request data' });
+    }
+
+    try {
+        const signer = ethers.utils.verifyMessage(`I authorize updating token details for ${contractAddress}`, signature);
+        if (signer.toLowerCase() !== userAddress.toLowerCase()) {
+            return res.status(401).json({ error: 'Invalid signature' });
+        }
+
+        const contract = new ethers.Contract(contractAddress, [
+            'function updateTokenDetails(string memory name, string memory symbol) public'
+        ], wallet);
+
+        const tx = await contract.updateTokenDetails(newTokenName, newTokenSymbol);
+        await tx.wait();
+
+        res.status(200).json({ message: 'Token details updated', txHash: tx.hash });
+    } catch (error) {
+        console.error('Error updating token details:', error);
+        res.status(500).json({ error: 'Failed to update token details', details: error.message });
+    }
+});
 
 // app.post('/api/sendTransaction', async (req, res) => {
 //     const { userAddress, signature, message, tokenAddress } = req.body;
