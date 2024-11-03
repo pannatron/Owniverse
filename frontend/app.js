@@ -322,3 +322,58 @@ async function unpauseToken() {
 }
 
 
+// ฟังก์ชันสำหรับอัปเดตชื่อและสัญลักษณ์ของ Token
+async function updateTokenDetails() {
+    if (!userAddress || !web3) {
+        alert('Please connect MetaMask first.');
+        return;
+    }
+
+    const newTokenName = document.getElementById('newTokenName').value;
+    const newTokenSymbol = document.getElementById('newTokenSymbol').value;
+    const contractAddress = document.getElementById('contractAddress').value;
+
+    if (!newTokenName || !newTokenSymbol) {
+        alert('Please enter both new token name and symbol.');
+        return;
+    }
+
+    try {
+        showLoading(true);
+
+        const abi = [
+            {
+                "constant": false,
+                "inputs": [
+                    { "name": "newName", "type": "string" },
+                    { "name": "newSymbol", "type": "string" }
+                ],
+                "name": "updateTokenDetails",
+                "outputs": [],
+                "type": "function"
+            }
+        ];
+
+        const contract = new web3.eth.Contract(abi, contractAddress);
+
+        await contract.methods.updateTokenDetails(newTokenName, newTokenSymbol)
+            .send({ from: userAddress, gas: 3000000 })
+            .on('transactionHash', function(hash) {
+                console.log('Transaction hash:', hash);
+                alert(`Transaction sent! Hash: ${hash}`);
+            })
+            .on('receipt', function(receipt) {
+                console.log('Transaction receipt:', receipt);
+                alert('Token details updated successfully!');
+            })
+            .on('error', function(error) {
+                console.error('Error updating token details:', error);
+                alert('Error updating token details: ' + error.message);
+            });
+    } catch (error) {
+        console.error("Error updating token details:", error);
+        alert("Error updating token details: " + error.message);
+    } finally {
+        showLoading(false);
+    }
+}
