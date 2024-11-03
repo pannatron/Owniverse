@@ -48,3 +48,21 @@ button[type="submit"], button {
 button:hover {
     background-color: #0056b3;
 }
+.action-button {
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    padding: 8px 12px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    margin-right: 5px;
+}
+
+.action-button:hover {
+    background-color: #0056b3;
+}
+
+.action-button.active {
+    background-color: #28a745; /* สีเขียวเพื่อแสดงว่าถูกเลือก */
+    border: 1px solid #1e7e34;
+}
